@@ -32,6 +32,14 @@ static void rmcrlf(char *s)
         s[--len] = 0;
 }
 
+// Change the '0' of string to a ','
+static void addComma(char *s)
+{
+    size_t len = strlen(s);
+    if (len && s[len] == 0)
+        s[len] = ',';
+}
+
 #define IN_FILE "cities.txt"
 
 int main(int argc, char **argv)
@@ -108,8 +116,17 @@ int main(int argc, char **argv)
             t2 = tvgetf();
             if (res)
                 printf("  found %s in %.6f sec.\n", (char *) res, t2 - t1);
-            else
-                printf("  %s not found.\n", word);
+            else {  //check if the word to search is name of a city
+                addComma(word);
+                t1 = tvgetf();
+                res = tst_search(root, word);
+                t2 = tvgetf();
+
+                if (res)
+                    printf("  found %s in %.6f sec.\n", (char *) res, t2 - t1);
+                else
+                    printf("  %s not found.\n", word);
+            }
             break;
         case 's':
             printf("find words matching prefix (at least 1 char): ");
