@@ -36,7 +36,7 @@ static void rmcrlf(char *s)
 static void addComma(char *s)
 {
     size_t len = strlen(s);
-    if (len && s[len] == 0)
+    if (len && s[len-1] != ',')
         s[len] = ',';
 }
 
@@ -50,6 +50,13 @@ int main(int argc, char **argv)
     int rtn = 0, idx = 0, sidx = 0;
     FILE *fp = fopen(IN_FILE, "r");
     double t1, t2;
+    FILE *selectFP, *benchFP;
+
+    // input cmd by benchmark or manual input
+    if (argc>1 && !strcmp(argv[1],"--bench"))   //by benchmark
+        selectFP=benchFP=fopen(argv[2], "r");   //manual
+    else
+        selectFP=stdin;
 
     if (!fp) { /* prompt, open, validate file for reading */
         fprintf(stderr, "error: file open failed '%s'.\n", argv[1]);
@@ -60,7 +67,7 @@ int main(int argc, char **argv)
     while ((rtn = fscanf(fp, "%s", word)) != EOF) {
         char *p = word;
         /* FIXME: insert reference to each string */
-        if (!tst_ins_del(&root, &p, INS, CPY)) {
+        if (!tst_ins_del(&root, &p, INS, REF)) {
             fprintf(stderr, "error: memory exhausted, tst_insert.\n");
             fclose(fp);
             return 1;
@@ -82,7 +89,7 @@ int main(int argc, char **argv)
             " d  delete word from the tree\n"
             " q  quit, freeing all data\n\n"
             "choice: ");
-        fgets(word, sizeof word, stdin);
+        fgets(word, sizeof word, selectFP);
         p = NULL;
         switch (*word) {
         case 'a':
@@ -95,7 +102,7 @@ int main(int argc, char **argv)
             p = word;
             t1 = tvgetf();
             /* FIXME: insert reference to each string */
-            res = tst_ins_del(&root, &p, INS, CPY);
+            res = tst_ins_del(&root, &p, INS, REF);
             t2 = tvgetf();
             if (res) {
                 idx++;
@@ -106,7 +113,7 @@ int main(int argc, char **argv)
             break;
         case 'f':
             printf("find word in tree: ");
-            if (!fgets(word, sizeof word, stdin)) {
+            if (!fgets(word, sizeof word, selectFP)) {
                 fprintf(stderr, "error: insufficient input.\n");
                 break;
             }
@@ -130,7 +137,7 @@ int main(int argc, char **argv)
             break;
         case 's':
             printf("find words matching prefix (at least 1 char): ");
-            if (!fgets(word, sizeof word, stdin)) {
+            if (!fgets(word, sizeof word, selectFP)) {
                 fprintf(stderr, "error: insufficient input.\n");
                 break;
             }
@@ -147,7 +154,7 @@ int main(int argc, char **argv)
             break;
         case 'd':
             printf("enter word to del: ");
-            if (!fgets(word, sizeof word, stdin)) {
+            if (!fgets(word, sizeof word, selectFP)) {
                 fprintf(stderr, "error: insufficient input.\n");
                 break;
             }
@@ -156,7 +163,7 @@ int main(int argc, char **argv)
             printf("  deleting %s\n", word);
             t1 = tvgetf();
             /* FIXME: remove reference to each string */
-            res = tst_ins_del(&root, &p, DEL, CPY);
+            res = tst_ins_del(&root, &p, DEL, REF);
             t2 = tvgetf();
             if (res)
                 printf("  delete failed.\n");
@@ -166,7 +173,8 @@ int main(int argc, char **argv)
             }
             break;
         case 'q':
-            tst_free_all(root);
+            tst_free(root);
+            fflush(stdout);
             return 0;
             break;
         default:

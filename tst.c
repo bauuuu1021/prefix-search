@@ -272,15 +272,28 @@ void *tst_ins_del(tst_node **root, char *const *s, const int del, const int cpy)
          * space for data, copy data as final eqkid, and return.
          */
         if (*p++ == 0) {
+            const char *eqdata = strdup(*s);
+
             if (cpy) { /* allocate storage for 's' */
-                const char *eqdata = strdup(*s);
                 if (!eqdata)
                     return NULL;
                 curr->eqkid = (tst_node *) eqdata;
                 return (void *) eqdata;
             } else { /* save pointer to 's' (allocated elsewhere) */
-                curr->eqkid = (tst_node *) *s;
-                return (void *) *s;
+                /*
+                *
+                *   **CAUTION:RESULT IS INCORRECT***
+                *
+                void *ptr=sbrk(8);  //alloc 8 bytes and store addr. in ptr
+                *(char*)(ptr+0)=**s;    // assign pointer to string to the 8 bytes space
+                curr->eqkid = (tst_node *) (sbrk(0)-8);
+
+                return (void *) ptr;
+                */
+                if (!eqdata)
+                    return NULL;
+                curr->eqkid = (tst_node *) eqdata;
+                return (void *) eqdata;
             }
         }
         pcurr = &(curr->eqkid);

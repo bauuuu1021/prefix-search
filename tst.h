@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 /* forward declaration of ternary search tree */
 typedef struct tst_node tst_node;

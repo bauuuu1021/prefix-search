@@ -42,6 +42,13 @@ int main(int argc, char **argv)
     int rtn = 0, idx = 0, sidx = 0;
     FILE *fp = fopen(IN_FILE, "r");
     double t1, t2;
+    FILE *selectFP, *benchFP;
+
+    // input cmd by benchmark or manual input
+    if (argc>1 && !strcmp(argv[1],"--bench"))   //by benchmark
+        selectFP=benchFP=fopen(argv[2], "r");   //manual
+    else
+        selectFP=stdin;
 
     if (!fp) { /* prompt, open, validate file for reading */
         fprintf(stderr, "error: file open failed '%s'.\n", argv[1]);
@@ -73,12 +80,12 @@ int main(int argc, char **argv)
             " d  delete word from the tree\n"
             " q  quit, freeing all data\n\n"
             "choice: ");
-        fgets(word, sizeof word, stdin);
+        fgets(word, sizeof word, selectFP);
         p = NULL;
         switch (*word) {
         case 'a':
             printf("enter word to add: ");
-            if (!fgets(word, sizeof word, stdin)) {
+            if (!fgets(word, sizeof word, selectFP)) {
                 fprintf(stderr, "error: insufficient input.\n");
                 break;
             }
@@ -96,7 +103,7 @@ int main(int argc, char **argv)
             break;
         case 'f':
             printf("find word in tree: ");
-            if (!fgets(word, sizeof word, stdin)) {
+            if (!fgets(word, sizeof word, selectFP)) {
                 fprintf(stderr, "error: insufficient input.\n");
                 break;
             }
@@ -111,7 +118,7 @@ int main(int argc, char **argv)
             break;
         case 's':
             printf("find words matching prefix (at least 1 char): ");
-            if (!fgets(word, sizeof word, stdin)) {
+            if (!fgets(word, sizeof word, selectFP)) {
                 fprintf(stderr, "error: insufficient input.\n");
                 break;
             }
@@ -128,7 +135,7 @@ int main(int argc, char **argv)
             break;
         case 'd':
             printf("enter word to del: ");
-            if (!fgets(word, sizeof word, stdin)) {
+            if (!fgets(word, sizeof word, selectFP)) {
                 fprintf(stderr, "error: insufficient input.\n");
                 break;
             }

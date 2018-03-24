@@ -35,11 +35,17 @@ deps := $(OBJS:%.o=.%.o.d)
 
 test_%: test_%.o $(OBJS_LIB)
 	$(VECHO) "  LD\t$@\n"
-	$(Q)$(CC) $(LDFLAGS) -o $@ $^
+	$(Q)$(CC) $(LDFLAGS) -g -o $@ $^
 
 %.o: %.c
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF .$@.d $<
+
+bench: test_ref.o test_cpy.o benchmark.txt
+	$(info performance of test_ref)
+	./test_ref --bench benchmark.txt
+	$(info performance of test_cpy)
+	./test_cpy --bench benchmark.txt
 
 clean:
 	$(RM) $(TESTS) $(OBJS)
