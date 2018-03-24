@@ -250,6 +250,10 @@ void *tst_ins_del(tst_node **root, char *const *s, const int del, const int cpy)
             tst_stack_push(&stk, curr); /* push node on stack for del */
     }
 
+    //if counldn't find the word to delete, return
+    if (del)
+        return "";
+
     /* if not duplicate, insert remaining chars into tree rooted at curr */
     for (;;) {
         /* allocate memory for node, and fill. use calloc (or include
