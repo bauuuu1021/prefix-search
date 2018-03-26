@@ -50,5 +50,7 @@ bench: test_ref.o test_cpy.o benchmark.txt
 clean:
 	$(RM) $(TESTS) $(OBJS)
 	$(RM) $(deps)
+	rm -rf result
+	mkdir result
 
 -include $(deps)

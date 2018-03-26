@@ -2,8 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
+#include <inttypes.h>
 #include "tst.h"
+
+uint64_t rdtsc()
+{
+    unsigned int lo,hi;
+    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+    return ((uint64_t)hi << 32) | lo;
+}
+
 
 /** constants insert, delete, max word(s) & stack nodes */
 enum { INS, DEL, WRDMAX = 256, STKMAX = 512, LMAX = 1024 };
@@ -32,10 +40,20 @@ static void rmcrlf(char *s)
         s[--len] = 0;
 }
 
+// Change the '0' of string to a ','
+static void addComma(char *s)
+{
+    size_t len = strlen(s);
+    if (len && s[len-1] != ',')
+        s[len] = ',';
+}
+
 #define IN_FILE "cities.txt"
+#define OUTPUT_CYCLE "result/cpyCycle.txt"
 
 int main(int argc, char **argv)
 {
+    uint64_t startCycle, endCycle;
     char word[WRDMAX] = "";
     char *sgl[LMAX] = {NULL};
     tst_node *root = NULL, *res = NULL;
@@ -43,6 +61,8 @@ int main(int argc, char **argv)
     FILE *fp = fopen(IN_FILE, "r");
     double t1, t2;
     FILE *selectFP, *benchFP;
+    FILE *outputCycle=fopen(OUTPUT_CYCLE,"a");
+
 
     // input cmd by benchmark or manual input
     if (argc>1 && !strcmp(argv[1],"--bench"))   //by benchmark
@@ -52,6 +72,7 @@ int main(int argc, char **argv)
 
     if (!fp) { /* prompt, open, validate file for reading */
         fprintf(stderr, "error: file open failed '%s'.\n", argv[1]);
+        fclose(outputCycle);
         return 1;
     }
 
@@ -61,6 +82,7 @@ int main(int argc, char **argv)
         if (!tst_ins_del(&root, &p, INS, CPY)) {
             fprintf(stderr, "error: memory exhausted, tst_insert.\n");
             fclose(fp);
+            fclose(outputCycle);
             return 1;
         }
         idx++;
@@ -109,12 +131,28 @@ int main(int argc, char **argv)
             }
             rmcrlf(word);
             t1 = tvgetf();
+            startCycle=rdtsc();
             res = tst_search(root, word);
+            endCycle=rdtsc();
+
             t2 = tvgetf();
             if (res)
                 printf("  found %s in %.6f sec.\n", (char *) res, t2 - t1);
-            else
-                printf("  %s not found.\n", word);
+            else {
+                addComma(word);
+                t1 = tvgetf();
+                startCycle=rdtsc();
+                res = tst_search(root, word);
+                endCycle=rdtsc();
+                t2 = tvgetf();
+
+                if (res)
+                    printf("  found %s in %.6f sec.\n", (char *) res, t2 - t1);
+                else
+                    printf("  %s not found.\n", word);
+            }
+            fprintf(outputCycle,"%" PRIu64 "\n", endCycle-startCycle);
+
             break;
         case 's':
             printf("find words matching prefix (at least 1 char): ");
@@ -154,6 +192,7 @@ int main(int argc, char **argv)
             break;
         case 'q':
             tst_free_all(root);
+            fclose(outputCycle);
             return 0;
             break;
         default:
@@ -162,5 +201,6 @@ int main(int argc, char **argv)
         }
     }
 
+    fclose(outputCycle);
     return 0;
 }
