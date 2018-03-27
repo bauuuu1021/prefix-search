@@ -46,13 +46,15 @@ bench: test_ref.o test_cpy.o benchmark_all.txt
 	./test_ref --bench benchmark_all.txt
 	$(info performance of test_cpy)
 	./test_cpy --bench benchmark_all.txt
+	./countCycle
 
 plot:result/countCycle.txt
-	gnuplot scripts/plot.gp
+	gnuplot scripts/cycle.gp
+	gnuplot scripts/time.gp
 	
 clean:
 	$(RM) $(TESTS) $(OBJS)
-	$(RM) $(deps)
+	$(RM) $(deps) *.png
 	rm -rf result
 	mkdir result
 

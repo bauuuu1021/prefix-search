@@ -287,17 +287,16 @@ void *tst_ins_del(tst_node **root, char *const *s, const int del, const int cpy)
                 /*
                 *
                 *   **CAUTION:RESULT IS INCORRECT***
-                *
-                void *ptr=sbrk(8);  //alloc 8 bytes and store addr. in ptr
-                *(char*)(ptr+0)=**s;    // assign pointer to string to the 8 bytes space
+
+                char *ptr=sbrk(8);  //alloc 8 bytes and store addr. in ptr
+                ptr=&(s);    // assign pointer to string to the 8 bytes space
                 curr->eqkid = (tst_node *) (sbrk(0)-8);
 
                 return (void *) ptr;
                 */
-                if (!eqdata)
-                    return NULL;
-                curr->eqkid = (tst_node *) eqdata;
-                return (void *) eqdata;
+
+                curr->eqkid = (tst_node *) *s;
+                return (void *) *s;
             }
         }
         pcurr = &(curr->eqkid);

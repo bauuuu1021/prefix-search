@@ -49,6 +49,8 @@ static void addComma(char *s)
 
 #define IN_FILE "cities.txt"
 #define OUTPUT_CYCLE "result/refCycle.txt"
+#define OUTPUT_TIME "result/buildTime.txt"
+
 int main(int argc, char **argv)
 {
     uint64_t startCycle, endCycle;
@@ -60,6 +62,7 @@ int main(int argc, char **argv)
     double t1, t2;
     FILE *selectFP, *benchFP;
     FILE *outputCycle=fopen(OUTPUT_CYCLE,"a");
+    FILE *outputTime=fopen(OUTPUT_TIME,"a");
 
     // input cmd by benchmark or manual input
     if (argc>1 && !strcmp(argv[1],"--bench"))   //by benchmark
@@ -70,25 +73,29 @@ int main(int argc, char **argv)
     if (!fp) { /* prompt, open, validate file for reading */
         fprintf(stderr, "error: file open failed '%s'.\n", argv[1]);
         fclose(outputCycle);
+        fclose(outputTime);
         return 1;
     }
 
     t1 = tvgetf();
     while ((rtn = fscanf(fp, "%s", word)) != EOF) {
-        char *p = word;
+        char *p = strdup(word);
         /* FIXME: insert reference to each string */
         if (!tst_ins_del(&root, &p, INS, REF)) {
             fprintf(stderr, "error: memory exhausted, tst_insert.\n");
             fclose(fp);
             fclose(outputCycle);
+            fclose(outputTime);
             return 1;
         }
         idx++;
     }
     t2 = tvgetf();
 
-    fclose(fp);
     printf("ternary_tree, loaded %d words in %.6f sec\n", idx, t2 - t1);
+    fprintf(outputTime,"BuildRef %.6f\n", t2 - t1);
+    fclose(outputTime);
+    fclose(fp);
 
     for (;;) {
         char *p;
