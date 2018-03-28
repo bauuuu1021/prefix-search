@@ -5,6 +5,38 @@
 #include <inttypes.h>
 #include "tst.h"
 
+//memory pool
+#define MEM_POOL_SIZE 100000000
+#define MAX_LENGH 28
+
+typedef struct MemoryPool {
+    char *current;
+    char *tail;
+} pool;
+
+pool * init (size_t size)
+{
+    pool *p = (pool*)malloc(size * sizeof(pool));
+    p->current=(char*)p+0;
+    *(p->current)=0;
+    p->tail=(char*)p+(int)size;
+
+    return p;
+}
+
+char * memAlloc (pool *p, size_t size)
+{
+    if (p->tail - p->current < size)
+        return NULL;
+
+    char *temp = (char*)p->current;
+    p->current += size;
+    *(p->current)=0;
+
+    return temp;
+}
+
+//use retsc to count prefix-search cycles
 uint64_t rdtsc()
 {
     unsigned int lo,hi;
@@ -77,10 +109,23 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    //build mem pool
+    pool * poolPtr = init(MEM_POOL_SIZE);
+
     t1 = tvgetf();
-    while ((rtn = fscanf(fp, "%s", word)) != EOF) {
-        char *p = strdup(word);
+    while ((rtn = fscanf(fp, "%s", poolPtr->current)) != EOF) {
+
         /* FIXME: insert reference to each string */
+
+        char *p=poolPtr->current;
+        if (!memAlloc (poolPtr, MAX_LENGH)) {
+            fprintf(stderr, "error: memory exhausted, memory pool.\n");
+            fclose(fp);
+            fclose(outputCycle);
+            fclose(outputTime);
+            return 1;
+        }
+
         if (!tst_ins_del(&root, &p, INS, REF)) {
             fprintf(stderr, "error: memory exhausted, tst_insert.\n");
             fclose(fp);
@@ -89,6 +134,8 @@ int main(int argc, char **argv)
             return 1;
         }
         idx++;
+
+
     }
     t2 = tvgetf();
 
@@ -202,6 +249,7 @@ int main(int argc, char **argv)
             tst_free(root);
             fflush(stdout);
             fclose(outputCycle);
+
             return 0;
             break;
         default:
