@@ -41,11 +41,12 @@ test_%: test_%.o $(OBJS_LIB)
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF .$@.d $<
 
-bench: test_ref.o test_cpy.o benchmark_all.txt
+bench: test_ref.o test_cpy.o benchmark_all.txt countCycle.c
 	$(info performance of test_ref)
 	./test_ref --bench benchmark_all.txt
 	$(info performance of test_cpy)
 	./test_cpy --bench benchmark_all.txt
+	gcc -o countCycle countCycle.c -lm
 	./countCycle
 
 plot:result/countCycle.txt
